@@ -14,183 +14,220 @@
 </style>
 
 <script is:inline>
-    const canvas = document.getElementById("simulationCanvas");
-    const ctx = canvas.getContext("2d");
-    const statsDiv = document.getElementById("stats");
+    document.addEventListener("DOMContentLoaded", () => {
+        const canvas = document.getElementById("simulationCanvas");
+        const ctx = canvas.getContext("2d");
+        const statsDiv = document.getElementById("stats");
 
-    let animationId;
-    let isSimulationRunning = false;
-    let frameCount = 0;
-    let entities = [];
-    let lastSurvivorAddTime = 0;
-    const survivorAddDelay = 60; // 3 segundos a 60 FPS
-    const maxAttempts = 50; // Número máximo de intentos para colocar un nuevo sobreviviente
+        let animationId;
+        let isSimulationRunning = false;
+        let frameCount = 0;
+        let entities = [];
+        let lastSurvivorAddTime = 0;
+        const survivorAddDelay = 60; // 1 seconds at 60 FPS
+        const maxAttempts = 50; // Maximum number of attempts to place a new survivor
 
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
-
-    class Entity {
-        constructor(x, y, radius, color, isSurvivor) {
-            this.x = x;
-            this.y = y;
-            this.radius = radius;
-            this.color = color;
-            this.isSurvivor = isSurvivor;
-            this.lifespan = isSurvivor ? Infinity : Math.random() * 300 + 100;
-            this.age = 0;
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         }
 
-        draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-            ctx.fillStyle = this.color;
-            ctx.fill();
-            ctx.closePath();
-        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
 
-        update() {
-            this.age++;
-            this.draw();
-        }
-
-        isDead() {
-            return this.age >= this.lifespan;
-        }
-    }
-
-    const nonSurvivorRadius = 2;
-    const survivorRadius = 60;
-
-    function createEntity(isSurvivor) {
-        const radius = isSurvivor ? survivorRadius : nonSurvivorRadius;
-        let x, y;
-        if (isSurvivor) {
-            [x, y] = findAvailableSpace(radius);
-        } else {
-            x = Math.random() * (canvas.width - radius * 2) + radius;
-            y = Math.random() * (canvas.height - radius * 2) + radius;
-        }
-        const color = isSurvivor ? "#00ff00" : "#ff0000";
-        return new Entity(x, y, radius, color, isSurvivor);
-    }
-
-    function findAvailableSpace(radius) {
-        for (let i = 0; i < maxAttempts; i++) {
-            const x = Math.random() * (canvas.width - radius * 2) + radius;
-            const y = Math.random() * (canvas.height - radius * 2) + radius;
-            if (!checkCollision(x, y, radius)) {
-                return [x, y];
+        class Entity {
+            constructor(x, y, radius, color, isSurvivor) {
+                this.x = x;
+                this.y = y;
+                this.initialRadius = radius;
+                this.targetRadius = isSurvivor ? survivorRadius : radius;
+                this.currentRadius = radius;
+                this.color = color;
+                this.isSurvivor = isSurvivor;
+                this.lifespan = isSurvivor
+                    ? Infinity
+                    : Math.random() * 300 + 100;
+                this.age = 0;
+                this.growthRate = (this.targetRadius - this.initialRadius) / 60; // Full growth in 1 seconds (60 frames at 60 FPS)
             }
-        }
-        return [null, null]; // No se encontró espacio disponible
-    }
 
-    function checkCollision(x, y, radius) {
-        for (let entity of entities) {
-            if (entity.isSurvivor) {
-                const dx = entity.x - x;
-                const dy = entity.y - y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < entity.radius + radius) {
-                    return true; // Colisión detectada
+            update() {
+                this.age++;
+                if (this.isSurvivor && this.currentRadius < this.targetRadius) {
+                    this.currentRadius = Math.min(
+                        this.currentRadius + this.growthRate,
+                        this.targetRadius,
+                    );
                 }
             }
-        }
-        return false; // No hay colisión
-    }
 
-    function updateEntities() {
-        const desiredNonSurvivors = parseInt(
-            document.getElementById("nonSurvivors").value,
-        );
-        const desiredSurvivors = parseInt(
-            document.getElementById("survivors").value,
-        );
-        const currentNonSurvivors = entities.filter(
-            (e) => !e.isSurvivor,
-        ).length;
-        const currentSurvivors = entities.filter((e) => e.isSurvivor).length;
-
-        // Add non-survivors
-        const nonSurvivorsToAdd = Math.min(
-            5,
-            desiredNonSurvivors - currentNonSurvivors,
-        );
-        for (let i = 0; i < nonSurvivorsToAdd; i++) {
-            entities.push(createEntity(false));
-        }
-
-        // Add survivors after delay and one at a time
-        if (
-            frameCount >= survivorAddDelay &&
-            frameCount - lastSurvivorAddTime >= survivorAddDelay
-        ) {
-            if (currentSurvivors >= desiredSurvivors) {
-                // Remove the oldest survivor
-                const oldestSurvivorIndex = entities.findIndex(
-                    (e) => e.isSurvivor,
+            draw() {
+                ctx.beginPath();
+                ctx.arc(
+                    this.x,
+                    this.y,
+                    this.currentRadius,
+                    0,
+                    Math.PI * 2,
+                    false,
                 );
-                if (oldestSurvivorIndex !== -1) {
-                    entities.splice(oldestSurvivorIndex, 1);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            isDead() {
+                return this.age >= this.lifespan;
+            }
+        }
+
+        const nonSurvivorRadius = 2;
+        const survivorRadius = 60;
+
+        function createEntity(isSurvivor) {
+            const radius = nonSurvivorRadius; // All start with the same small radius
+            let x, y;
+            if (isSurvivor) {
+                [x, y] = findAvailableSpace(survivorRadius); // Use final radius to avoid overlaps
+            } else {
+                x = Math.random() * (canvas.width - radius * 2) + radius;
+                y = Math.random() * (canvas.height - radius * 2) + radius;
+            }
+            const color = isSurvivor ? "#00ff00" : "#ff0000";
+            return new Entity(x, y, radius, color, isSurvivor);
+        }
+
+        function findAvailableSpace(radius) {
+            for (let i = 0; i < maxAttempts; i++) {
+                const x = Math.random() * (canvas.width - radius * 2) + radius;
+                const y = Math.random() * (canvas.height - radius * 2) + radius;
+                if (!checkCollision(x, y, radius)) {
+                    return [x, y];
                 }
             }
-            const newSurvivor = createEntity(true);
-            if (newSurvivor.x !== null && newSurvivor.y !== null) {
-                entities.push(newSurvivor);
-                lastSurvivorAddTime = frameCount;
+            return [null, null]; // No available space found
+        }
+
+        function checkCollision(x, y, radius) {
+            for (let entity of entities) {
+                if (entity.isSurvivor) {
+                    const dx = entity.x - x;
+                    const dy = entity.y - y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < entity.targetRadius + radius) {
+                        return true; // Collision detected
+                    }
+                }
+            }
+            return false; // No collision
+        }
+
+        function updateEntities() {
+            const desiredNonSurvivors = parseInt(
+                document.getElementById("nonSurvivors").value,
+            );
+            const desiredSurvivors = parseInt(
+                document.getElementById("survivors").value,
+            );
+            const currentNonSurvivors = entities.filter(
+                (e) => !e.isSurvivor,
+            ).length;
+            const currentSurvivors = entities.filter(
+                (e) => e.isSurvivor,
+            ).length;
+
+            // Add non-survivors
+            const nonSurvivorsToAdd = Math.min(
+                15,
+                desiredNonSurvivors - currentNonSurvivors,
+            );
+            for (let i = 0; i < nonSurvivorsToAdd; i++) {
+                entities.push(createEntity(false));
+            }
+
+            // Add survivors after delay and one at a time
+            if (
+                frameCount >= survivorAddDelay &&
+                frameCount - lastSurvivorAddTime >= survivorAddDelay &&
+                currentSurvivors < desiredSurvivors
+            ) {
+                const newSurvivor = createEntity(true);
+                if (newSurvivor.x !== null && newSurvivor.y !== null) {
+                    entities.push(newSurvivor);
+                    lastSurvivorAddTime = frameCount;
+                }
+            }
+
+            // Remove excess survivors if needed
+            while (currentSurvivors > desiredSurvivors) {
+                const survivorIndex = entities.findIndex((e) => e.isSurvivor);
+                if (survivorIndex !== -1) {
+                    entities.splice(survivorIndex, 1);
+                }
+                currentSurvivors--;
+            }
+
+            // Remove excess non-survivors if needed
+            if (currentNonSurvivors > desiredNonSurvivors) {
+                const excessNonSurvivors =
+                    currentNonSurvivors - desiredNonSurvivors;
+                entities = entities.filter(
+                    (e) =>
+                        e.isSurvivor ||
+                        Math.random() >
+                            excessNonSurvivors / currentNonSurvivors,
+                );
             }
         }
 
-        // Remove excess non-survivors if needed
-        if (currentNonSurvivors > desiredNonSurvivors) {
-            const excessNonSurvivors =
-                currentNonSurvivors - desiredNonSurvivors;
-            entities = entities.filter(
-                (e) =>
-                    e.isSurvivor ||
-                    Math.random() > excessNonSurvivors / currentNonSurvivors,
-            );
+        function animate() {
+            if (!isSimulationRunning) return;
+
+            animationId = requestAnimationFrame(animate);
+            frameCount++;
+
+            // Draw white background
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            updateEntities();
+
+            entities = entities.filter((entity) => !entity.isDead());
+
+            // Update all entities
+            entities.forEach((entity) => entity.update());
+
+            // Draw red entities first
+            entities
+                .filter((entity) => !entity.isSurvivor)
+                .forEach((entity) => entity.draw());
+
+            // Then draw green entities
+            entities
+                .filter((entity) => entity.isSurvivor)
+                .forEach((entity) => entity.draw());
+
+            const totalEntities = entities.length;
+            const survivors = entities.filter((e) => e.isSurvivor).length;
+            if (statsDiv) {
+                statsDiv.innerHTML = `Total de entidades: ${totalEntities}<br>Sobrevivientes: ${survivors} (${((survivors / totalEntities) * 100).toFixed(1)}%)`;
+            }
         }
-    }
 
-    function animate() {
-        if (!isSimulationRunning) return;
+        // Expose necessary functions and variables globally
+        window.startSimulation = () => {
+            isSimulationRunning = true;
+            frameCount = 0;
+            lastSurvivorAddTime = 0;
+            entities = [];
+            animate();
+        };
 
-        animationId = requestAnimationFrame(animate);
-        frameCount++;
+        window.stopSimulation = () => {
+            isSimulationRunning = false;
+            cancelAnimationFrame(animationId);
+        };
 
-        // Dibujar fondo blanco
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        updateEntities();
-
-        entities = entities.filter((entity) => !entity.isDead());
-        entities.forEach((entity) => entity.update());
-
-        const totalEntities = entities.length;
-        const survivors = entities.filter((e) => e.isSurvivor).length;
-        statsDiv.innerHTML = `Total de entidades: ${totalEntities}<br>Sobrevivientes: ${survivors} (${((survivors / totalEntities) * 100).toFixed(1)}%)`;
-    }
-
-    // Exponer funciones y variables necesarias globalmente
-    window.startSimulation = () => {
-        isSimulationRunning = true;
-        frameCount = 0;
-        lastSurvivorAddTime = 0;
-        entities = [];
-        animate();
-    };
-
-    window.stopSimulation = () => {
-        isSimulationRunning = false;
-        cancelAnimationFrame(animationId);
-    };
-
-    window.getCanvas = () => canvas;
+        window.getCanvas = () => canvas;
+    });
 </script>
