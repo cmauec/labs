@@ -1,0 +1,119 @@
+---
+
+---
+
+<div id="controls">
+    <div class="slider-container">
+        <label for="nonSurvivors">No Sobrevivientes:</label>
+        <input type="range" id="nonSurvivors" min="0" max="1000" value="950" />
+        <span id="nonSurvivorsValue">950</span>
+    </div>
+    <div class="slider-container">
+        <label for="survivors">Sobrevivientes:</label>
+        <input type="range" id="survivors" min="0" max="100" value="5" />
+        <span id="survivorsValue">5</span>
+    </div>
+    <button id="startSimulation">Iniciar</button>
+    <button id="startRecording">Iniciar Grabación</button>
+    <button id="stopRecording" disabled>Detener Grabación</button>
+</div>
+
+<style>
+    #controls {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 10px;
+        border-radius: 5px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .slider-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .slider-container label {
+        flex: 1;
+        margin-right: 10px;
+    }
+
+    .slider-container input {
+        flex: 2;
+    }
+
+    button {
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+</style>
+
+<script is:inline>
+    const startSimulationButton = document.getElementById("startSimulation");
+    const startRecordingButton = document.getElementById("startRecording");
+    const stopRecordingButton = document.getElementById("stopRecording");
+    const nonSurvivorsSlider = document.getElementById("nonSurvivors");
+    const survivorsSlider = document.getElementById("survivors");
+    const nonSurvivorsValue = document.getElementById("nonSurvivorsValue");
+    const survivorsValue = document.getElementById("survivorsValue");
+
+    let mediaRecorder;
+    let recordedChunks = [];
+
+    startSimulationButton.addEventListener("click", () => {
+        if (startSimulationButton.textContent === "Iniciar") {
+            window.startSimulation();
+            startSimulationButton.textContent = "Detener";
+        } else {
+            window.stopSimulation();
+            startSimulationButton.textContent = "Iniciar";
+        }
+    });
+
+    startRecordingButton.addEventListener("click", () => {
+        recordedChunks = [];
+        const stream = window.getCanvas().captureStream(30); // 30 FPS
+        mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: "video/webm" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            document.body.appendChild(a);
+            a.style = "display: none";
+            a.href = url;
+            a.download = "survival-simulation.webm";
+            a.click();
+            window.URL.revokeObjectURL(url);
+        };
+
+        mediaRecorder.start();
+        startRecordingButton.disabled = true;
+        stopRecordingButton.disabled = false;
+    });
+
+    stopRecordingButton.addEventListener("click", () => {
+        mediaRecorder.stop();
+        startRecordingButton.disabled = false;
+        stopRecordingButton.disabled = true;
+    });
+
+    nonSurvivorsSlider.addEventListener("input", () => {
+        nonSurvivorsValue.textContent = nonSurvivorsSlider.value;
+    });
+
+    survivorsSlider.addEventListener("input", () => {
+        survivorsValue.textContent = survivorsSlider.value;
+    });
+</script>

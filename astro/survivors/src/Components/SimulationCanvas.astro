@@ -1,0 +1,196 @@
+---
+
+---
+
+<canvas id="simulationCanvas"></canvas>
+
+<style>
+    canvas {
+        border: 1px solid black;
+        background-color: #ffffff;
+        width: 100%;
+        height: 100%;
+    }
+</style>
+
+<script is:inline>
+    const canvas = document.getElementById("simulationCanvas");
+    const ctx = canvas.getContext("2d");
+    const statsDiv = document.getElementById("stats");
+
+    let animationId;
+    let isSimulationRunning = false;
+    let frameCount = 0;
+    let entities = [];
+    let lastSurvivorAddTime = 0;
+    const survivorAddDelay = 60; // 3 segundos a 60 FPS
+    const maxAttempts = 50; // Número máximo de intentos para colocar un nuevo sobreviviente
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    class Entity {
+        constructor(x, y, radius, color, isSurvivor) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.color = color;
+            this.isSurvivor = isSurvivor;
+            this.lifespan = isSurvivor ? Infinity : Math.random() * 300 + 100;
+            this.age = 0;
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        update() {
+            this.age++;
+            this.draw();
+        }
+
+        isDead() {
+            return this.age >= this.lifespan;
+        }
+    }
+
+    const nonSurvivorRadius = 2;
+    const survivorRadius = 60;
+
+    function createEntity(isSurvivor) {
+        const radius = isSurvivor ? survivorRadius : nonSurvivorRadius;
+        let x, y;
+        if (isSurvivor) {
+            [x, y] = findAvailableSpace(radius);
+        } else {
+            x = Math.random() * (canvas.width - radius * 2) + radius;
+            y = Math.random() * (canvas.height - radius * 2) + radius;
+        }
+        const color = isSurvivor ? "#00ff00" : "#ff0000";
+        return new Entity(x, y, radius, color, isSurvivor);
+    }
+
+    function findAvailableSpace(radius) {
+        for (let i = 0; i < maxAttempts; i++) {
+            const x = Math.random() * (canvas.width - radius * 2) + radius;
+            const y = Math.random() * (canvas.height - radius * 2) + radius;
+            if (!checkCollision(x, y, radius)) {
+                return [x, y];
+            }
+        }
+        return [null, null]; // No se encontró espacio disponible
+    }
+
+    function checkCollision(x, y, radius) {
+        for (let entity of entities) {
+            if (entity.isSurvivor) {
+                const dx = entity.x - x;
+                const dy = entity.y - y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < entity.radius + radius) {
+                    return true; // Colisión detectada
+                }
+            }
+        }
+        return false; // No hay colisión
+    }
+
+    function updateEntities() {
+        const desiredNonSurvivors = parseInt(
+            document.getElementById("nonSurvivors").value,
+        );
+        const desiredSurvivors = parseInt(
+            document.getElementById("survivors").value,
+        );
+        const currentNonSurvivors = entities.filter(
+            (e) => !e.isSurvivor,
+        ).length;
+        const currentSurvivors = entities.filter((e) => e.isSurvivor).length;
+
+        // Add non-survivors
+        const nonSurvivorsToAdd = Math.min(
+            5,
+            desiredNonSurvivors - currentNonSurvivors,
+        );
+        for (let i = 0; i < nonSurvivorsToAdd; i++) {
+            entities.push(createEntity(false));
+        }
+
+        // Add survivors after delay and one at a time
+        if (
+            frameCount >= survivorAddDelay &&
+            frameCount - lastSurvivorAddTime >= survivorAddDelay
+        ) {
+            if (currentSurvivors >= desiredSurvivors) {
+                // Remove the oldest survivor
+                const oldestSurvivorIndex = entities.findIndex(
+                    (e) => e.isSurvivor,
+                );
+                if (oldestSurvivorIndex !== -1) {
+                    entities.splice(oldestSurvivorIndex, 1);
+                }
+            }
+            const newSurvivor = createEntity(true);
+            if (newSurvivor.x !== null && newSurvivor.y !== null) {
+                entities.push(newSurvivor);
+                lastSurvivorAddTime = frameCount;
+            }
+        }
+
+        // Remove excess non-survivors if needed
+        if (currentNonSurvivors > desiredNonSurvivors) {
+            const excessNonSurvivors =
+                currentNonSurvivors - desiredNonSurvivors;
+            entities = entities.filter(
+                (e) =>
+                    e.isSurvivor ||
+                    Math.random() > excessNonSurvivors / currentNonSurvivors,
+            );
+        }
+    }
+
+    function animate() {
+        if (!isSimulationRunning) return;
+
+        animationId = requestAnimationFrame(animate);
+        frameCount++;
+
+        // Dibujar fondo blanco
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        updateEntities();
+
+        entities = entities.filter((entity) => !entity.isDead());
+        entities.forEach((entity) => entity.update());
+
+        const totalEntities = entities.length;
+        const survivors = entities.filter((e) => e.isSurvivor).length;
+        statsDiv.innerHTML = `Total de entidades: ${totalEntities}<br>Sobrevivientes: ${survivors} (${((survivors / totalEntities) * 100).toFixed(1)}%)`;
+    }
+
+    // Exponer funciones y variables necesarias globalmente
+    window.startSimulation = () => {
+        isSimulationRunning = true;
+        frameCount = 0;
+        lastSurvivorAddTime = 0;
+        entities = [];
+        animate();
+    };
+
+    window.stopSimulation = () => {
+        isSimulationRunning = false;
+        cancelAnimationFrame(animationId);
+    };
+
+    window.getCanvas = () => canvas;
+</script>
