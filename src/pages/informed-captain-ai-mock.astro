@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>El Capitán Informado con IA</title>
+        <script src="https://cdn.tailwindcss.com" is:inline></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <style is:inline>
+            body {
+                font-family: "Inter", sans-serif;
+            }
+            .agent-card {
+                transform: translateY(20px);
+                opacity: 0;
+                transition:
+                    transform 0.5s ease-out,
+                    opacity 0.5s ease-out;
+            }
+            .agent-card.visible {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-900 text-white antialiased">
+        <div class="container mx-auto px-4 py-8 md:py-16">
+            <!-- Encabezado -->
+            <header class="text-center mb-12">
+                <h1
+                    class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600"
+                >
+                    Consejo de IA
+                </h1>
+                <p class="text-gray-400 mt-2 text-lg">
+                    Presenta tu idea y recibe el análisis de nuestro panel de
+                    expertos en IA.
+                </p>
+            </header>
+
+            <!-- Formulario de Idea -->
+            <main class="max-w-3xl mx-auto">
+                <form
+                    id="idea-form"
+                    class="bg-gray-800/50 backdrop-blur-sm p-6 rounded-2xl shadow-2xl border border-gray-700"
+                >
+                    <label
+                        for="idea-input"
+                        class="block text-lg font-semibold mb-3 text-gray-200"
+                        >Tu Gran Idea:</label
+                    >
+                    <textarea
+                        id="idea-input"
+                        rows="6"
+                        class="w-full bg-gray-900 border border-gray-600 rounded-lg p-4 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 placeholder-gray-500"
+                        placeholder="Ej: Una app que traduce el llanto de los bebés..."
+                    ></textarea>
+                    <button
+                        type="submit"
+                        class="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 duration-300 ease-in-out shadow-lg"
+                    >
+                        Analizar Idea
+                    </button>
+                </form>
+
+                <!-- Spinner de Carga -->
+                <div id="loader" class="text-center py-10 hidden">
+                    <svg
+                        class="animate-spin h-8 w-8 text-indigo-400 mx-auto"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                    >
+                        <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"></circle>
+                        <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                    </svg>
+                    <p class="mt-4 text-gray-400">
+                        Nuestros agentes están deliberando...
+                    </p>
+                </div>
+
+                <!-- Sección de Resultados -->
+                <div id="results-section" class="mt-16 hidden">
+                    <div class="mb-8">
+                        <h3 class="text-gray-400 font-semibold">
+                            Análisis para la idea:
+                        </h3>
+                        <p
+                            id="submitted-idea"
+                            class="text-xl text-gray-200 mt-2 p-4 bg-gray-800 rounded-lg border border-gray-700"
+                        >
+                        </p>
+                    </div>
+
+                    <h2 class="text-3xl font-bold text-center mb-8">
+                        Veredictos de los Agentes
+                    </h2>
+                    <div
+                        id="agents-feedback"
+                        class="grid grid-cols-1 md:grid-cols-2 gap-6"
+                    >
+                        <!-- Las tarjetas de los agentes se insertarán aquí -->
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <script is:inline>
+            // --- Referencias al DOM ---
+            const ideaForm = document.getElementById("idea-form");
+            const ideaInput = document.getElementById("idea-input");
+            const loader = document.getElementById("loader");
+            const resultsSection = document.getElementById("results-section");
+            const submittedIdea = document.getElementById("submitted-idea");
+            const agentsFeedbackContainer =
+                document.getElementById("agents-feedback");
+
+            // --- Agentes de IA Ficticios y sus Respuestas Mock ---
+            const agents = [
+                {
+                    name: "Vanguard",
+                    role: "Analista Financiero",
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>`,
+                    feedback: (idea) =>
+                        `Analizando la idea de "${idea.substring(0, 20)}...", observo un potencial de mercado interesante, pero los costos iniciales de desarrollo y marketing podrían ser elevados. Se necesitaría una estrategia de monetización clara desde el día uno, quizás un modelo freemium con características premium. Recomiendo un análisis de competidores exhaustivo antes de invertir capital significativo.`,
+                },
+                {
+                    name: "Nexus",
+                    role: "Experta en Marketing",
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.354a1.76 1.76 0 013.417-.592zM11 5.882a2.25 2.25 0 012.25 2.25v1.833c0 .357.183.684.473.869l3.468 2.023a2.25 2.25 0 003.417-1.768V9.131a2.25 2.25 0 00-2.25-2.25h-1.833a2.25 2.25 0 00-2.25 2.25v1.833c0 .357-.183.684-.473.869l-3.468-2.023A2.25 2.25 0 005.882 9.13V5.882a2.25 2.25 0 012.25-2.25h1.833a2.25 2.25 0 012.25 2.25z" /></svg>`,
+                    feedback: (idea) =>
+                        `La clave para "${idea.substring(0, 20)}..." será identificar el nicho de audiencia correcto. ¿Nos dirigimos a un público masivo o a un segmento específico? La narrativa de la marca debe ser poderosa y conectar emocionalmente. Sugiero una campaña de lanzamiento en redes sociales, colaborando con influencers del sector para generar expectación y credibilidad inicial.`,
+                },
+                {
+                    name: "Helios",
+                    role: "Líder Técnico",
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>`,
+                    feedback: (idea) =>
+                        `Desde el punto de vista técnico, la idea es factible. Requerirá una arquitectura escalable en la nube, probablemente usando microservicios. El mayor desafío será el algoritmo central. Si involucra IA, necesitaremos un gran conjunto de datos para entrenar el modelo. La seguridad y la privacidad de los datos del usuario deben ser una prioridad absoluta en la infraestructura.`,
+                },
+                {
+                    name: "Erebus",
+                    role: "Abogado del Diablo",
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 10h.01M15 10h.01M15 15a4.5 4.5 0 01-6 0" />
+                </svg>`,
+                    feedback: (idea) =>
+                        `Seamos realistas, la idea de "${idea.substring(0, 20)}..." es un campo minado. El mercado está saturado, los usuarios son volátiles y la competencia es feroz. ¿Realmente crees que tienes algo que no se haya intentado y haya fracasado antes? Cada línea de código es un posible bug, cada nuevo usuario es un coste de servidor. El camino al fracaso está pavimentado con buenas intenciones.`,
+                },
+                {
+                    name: "Oracle",
+                    role: "Estratega de Producto",
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`,
+                    feedback: (idea) =>
+                        `Esta idea resuelve un problema real, lo cual es un excelente punto de partida. El MVP (Producto Mínimo Viable) debería centrarse en una única función principal y ejecutarla a la perfección. La experiencia de usuario debe ser intuitiva y sin fricciones. Debemos planificar un roadmap a largo plazo que incluya la retroalimentación de los primeros usuarios para iterar y mejorar continuamente.`,
+                },
+                {
+                    name: "Echo",
+                    role: "Analista de Ética",
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>`,
+                    feedback: (idea) =>
+                        `Debemos considerar las implicaciones éticas. ¿Cómo se utilizarán los datos recopilados? ¿Podría la tecnología ser usada de forma indebida o generar sesgos? Es crucial ser transparentes con los usuarios sobre cómo funciona el sistema y qué se hace con su información. Un marco ético sólido no solo es lo correcto, sino que también genera confianza y protege la reputación del producto a largo plazo.`,
+                },
+            ];
+
+            // --- Lógica del Formulario ---
+            ideaForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const ideaText = ideaInput.value.trim();
+
+                if (!ideaText) {
+                    // Podríamos mostrar un error, pero por ahora no hacemos nada si está vacío.
+                    return;
+                }
+
+                // 1. Ocultar resultados anteriores y mostrar el loader
+                resultsSection.classList.add("hidden");
+                agentsFeedbackContainer.innerHTML = ""; // Limpiar feedbacks anteriores
+                loader.classList.remove("hidden");
+
+                // 2. Simular el tiempo de análisis de la IA
+                setTimeout(() => {
+                    // 3. Ocultar el loader
+                    loader.classList.add("hidden");
+
+                    // 4. Poblar y mostrar los resultados
+                    submittedIdea.textContent = ideaText;
+
+                    agents.forEach((agent, index) => {
+                        const card = document.createElement("div");
+                        card.className =
+                            "agent-card bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg";
+                        card.innerHTML = `
+                        <div class="flex items-center mb-4">
+                            ${agent.icon}
+                            <div class="ml-4">
+                                <h4 class="text-xl font-bold text-gray-100">${agent.name}</h4>
+                                <p class="text-sm text-gray-400">${agent.role}</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-300 leading-relaxed">${agent.feedback(ideaText)}</p>
+                    `;
+                        agentsFeedbackContainer.appendChild(card);
+
+                        // Animar la aparición de la tarjeta
+                        setTimeout(() => {
+                            card.classList.add("visible");
+                        }, 100 * index);
+                    });
+
+                    resultsSection.classList.remove("hidden");
+
+                    // Scroll suave hacia los resultados
+                    resultsSection.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                    });
+                }, 2500); // Simula 2.5 segundos de "pensamiento"
+            });
+        </script>
+    </body>
+</html>
