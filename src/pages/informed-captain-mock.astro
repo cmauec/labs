@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Foro de Decisiones (HTML)</title>
+        <!-- Se incluye Tailwind CSS para los estilos. Es un framework que permite estilizar directamente en el HTML. -->
+        <script src="https://cdn.tailwindcss.com" is:inline></script>
+    </head>
+
+    <body class="font-sans bg-gray-50">
+        <!-- 1. CABECERA DE LA APLICACIÓN -->
+        <!-- Contiene el título principal y un subtítulo. -->
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+                <h1 class="text-3xl font-bold leading-tight text-gray-900">
+                    Foro de Decisiones
+                </h1>
+                <p class="text-gray-500 mt-1">
+                    Metodología del Capitán Informado
+                </p>
+            </div>
+        </header>
+
+        <!-- 2. CONTENIDO PRINCIPAL -->
+        <!-- Se divide en una cuadrícula de 3 columnas en pantallas grandes (lg) y 1 columna en móviles. -->
+        <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- 2.1. COLUMNA IZQUIERDA (1/3 del ancho en pantallas grandes) -->
+                <!-- Contiene el formulario para nuevas propuestas y la lista de decisiones. -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Formulario para crear una nueva propuesta -->
+                    <div class="bg-white p-5 rounded-lg shadow">
+                        <h2
+                            class="text-xl font-semibold mb-4 text-gray-800 flex items-center"
+                        >
+                            <!-- Icono de "Más" -->
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="h-6 w-6"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            <span class="ml-2">Nueva Propuesta</span>
+                        </h2>
+                        <form id="new-decision-form" class="space-y-4">
+                            <div>
+                                <label
+                                    for="captainName"
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Tu Nombre (Capitán)</label
+                                >
+                                <input
+                                    type="text"
+                                    id="captainName"
+                                    required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                                    placeholder="Ej: Ana"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    for="title"
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Título de la Decisión</label
+                                >
+                                <input
+                                    type="text"
+                                    id="title"
+                                    required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                                    placeholder="Ej: Cambiar de proveedor"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    for="description"
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Descripción y Contexto</label
+                                >
+                                <textarea
+                                    id="description"
+                                    rows="4"
+                                    required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                                    placeholder="Explica la situación y qué necesitas del equipo..."
+                                ></textarea>
+                            </div>
+                            <button
+                                type="submit"
+                                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                            >
+                                Crear Propuesta
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Contenedor para la lista de propuestas activas -->
+                    <div class="bg-white rounded-lg shadow">
+                        <h3
+                            class="text-lg font-semibold p-4 border-b border-gray-200"
+                        >
+                            Propuestas Activas
+                        </h3>
+                        <!-- La lista (ul) se llenará dinámicamente con JavaScript -->
+                        <ul id="decision-list" class="divide-y divide-gray-200">
+                            <!-- Los elementos de la lista (li) se insertarán aquí -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2.2. COLUMNA DERECHA (2/3 del ancho en pantallas grandes) -->
+                <!-- Muestra los detalles de la decisión que se haya seleccionado. -->
+                <div id="decision-details" class="lg:col-span-2">
+                    <!-- El contenido de esta sección se generará completamente con JavaScript -->
+                </div>
+            </div>
+        </main>
+
+        <!-- 3. SCRIPT DE JAVASCRIPT -->
+        <!-- Toda la lógica interactiva de la aplicación reside aquí. -->
+        <script is:inline>
+            document.addEventListener("DOMContentLoaded", () => {
+                // --- ESTADO INICIAL DE LA APLICACIÓN ---
+                // En una aplicación real, estos datos vendrían de una base de datos.
+                let decisions = [
+                    {
+                        id: "dec-1",
+                        captain: "Ana",
+                        title: "Adoptar un nuevo framework para el Frontend",
+                        description:
+                            "Propongo que migremos nuestros proyectos de la librería actual a React. Esto nos daría ventajas en rendimiento, un ecosistema más grande y facilidad para encontrar talento. Necesito sus opiniones sobre los posibles riesgos, costos y el tiempo que tomaría la migración.",
+                        comments: [
+                            {
+                                id: "com-1",
+                                author: "Beto",
+                                text: "Me parece una buena idea a largo plazo. Mi preocupación es la curva de aprendizaje para el equipo que no conoce React. ¿Planeamos alguna capacitación?",
+                                likes: 5,
+                                timestamp: new Date(
+                                    Date.now() - 1000 * 60 * 60 * 1.5,
+                                ),
+                            },
+                            {
+                                id: "com-2",
+                                author: "Carla",
+                                text: "Totalmente de acuerdo. El rendimiento de la app actual es un problema. Además, podríamos reutilizar componentes más fácilmente.",
+                                likes: 12,
+                                timestamp: new Date(
+                                    Date.now() - 1000 * 60 * 60 * 1,
+                                ),
+                            },
+                        ],
+                        finalDecision: null,
+                        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
+                    },
+                    {
+                        id: "dec-2",
+                        captain: "David",
+                        title: "Cambiar la política de trabajo remoto",
+                        description:
+                            "Estoy evaluando si deberíamos pasar a un modelo híbrido permanente (3 días en oficina, 2 en casa). Quiero escuchar sus puntos de vista sobre cómo esto afectaría la colaboración, el balance vida-trabajo y la productividad general.",
+                        comments: [],
+                        finalDecision: {
+                            text: "Después de analizar todos los comentarios y datos, la decisión es implementar el modelo híbrido a partir del próximo trimestre. Se publicará una guía detallada con las políticas.",
+                            timestamp: new Date(
+                                Date.now() - 1000 * 60 * 60 * 24,
+                            ),
+                        },
+                        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26),
+                    },
+                ];
+                // Guarda el ID de la decisión seleccionada actualmente.
+                let selectedDecisionId = "dec-1";
+
+                // --- REFERENCIAS A ELEMENTOS DEL DOM ---
+                // Se obtienen los elementos del HTML para poder manipularlos.
+                const decisionListEl = document.getElementById("decision-list");
+                const decisionDetailsEl =
+                    document.getElementById("decision-details");
+                const newDecisionForm =
+                    document.getElementById("new-decision-form");
+
+                // --- FUNCIONES DE RENDERIZADO (Dibujan la interfaz) ---
+
+                // Dibuja la lista de decisiones en la columna izquierda.
+                function renderDecisionList() {
+                    decisionListEl.innerHTML = ""; // Limpia la lista actual
+                    decisions.forEach((d) => {
+                        // Crea un elemento de lista (li) por cada decisión.
+                        const li = document.createElement("li");
+                        li.className = `p-4 cursor-pointer hover:bg-gray-100 ${selectedDecisionId === d.id ? "bg-indigo-50" : ""}`;
+                        li.dataset.id = d.id; // Guarda el ID en el elemento para identificarlo al hacer clic.
+
+                        const finalDecisionBadge = d.finalDecision
+                            ? `<span class="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full mt-2 inline-block">Decidido</span>`
+                            : "";
+
+                        li.innerHTML = `
+                        <p class="font-semibold text-gray-800">${d.title}</p>
+                        <div class="flex justify-between items-center text-sm text-gray-500 mt-1">
+                            <span>Capitán: ${d.captain}</span>
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clip-rule="evenodd" /></svg>
+                                <span class="ml-1">${d.comments.length}</span>
+                            </div>
+                        </div>
+                        ${finalDecisionBadge}
+                    `;
+                        decisionListEl.appendChild(li);
+                    });
+                }
+
+                // Dibuja los detalles de la decisión seleccionada en la columna derecha.
+                function renderSelectedDecision() {
+                    const decision = decisions.find(
+                        (d) => d.id === selectedDecisionId,
+                    );
+                    if (!decision) {
+                        // Si no hay ninguna seleccionada, muestra un mensaje de bienvenida.
+                        decisionDetailsEl.innerHTML = `
+                        <div class="bg-white p-6 rounded-lg shadow text-center">
+                            <h2 class="text-2xl font-semibold text-gray-700">Bienvenido al Foro de Decisiones</h2>
+                            <p class="mt-2 text-gray-500">Selecciona una propuesta de la izquierda para ver los detalles o crea una nueva.</p>
+                        </div>`;
+                        return;
+                    }
+
+                    // Genera el HTML para la lista de comentarios.
+                    const commentsHtml = decision.comments
+                        .map(
+                            (c) => `
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold text-gray-800">${c.author}</p>
+                                <p class="text-gray-600 mt-1 whitespace-pre-wrap">${c.text}</p>
+                            </div>
+                            <button data-comment-id="${c.id}" class="like-button flex items-center space-x-1 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-full p-2 transition-colors duration-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.562 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" /></svg>
+                                <span class="font-semibold text-sm">${c.likes}</span>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">${new Date(c.timestamp).toLocaleString()}</p>
+                    </div>
+                `,
+                        )
+                        .join("");
+
+                    // Genera el HTML para la caja de decisión final (si existe).
+                    const finalDecisionHtml = decision.finalDecision
+                        ? `
+                    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+                        <h3 class="text-lg font-semibold text-green-800 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <span class="ml-2">Decisión Final del Capitán</span>
+                        </h3>
+                        <p class="text-green-700 mt-2 whitespace-pre-wrap">${decision.finalDecision.text}</p>
+                        <p class="text-xs text-green-500 mt-3">Decidido: ${new Date(decision.finalDecision.timestamp).toLocaleString()}</p>
+                    </div>
+                `
+                        : `
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg">
+                        <h3 class="text-lg font-semibold text-indigo-800">Registrar Decisión Final (Capitán)</h3>
+                        <form id="final-decision-form" class="mt-3 space-y-3">
+                            <textarea name="finalDecisionText" required rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" placeholder="Como capitán, escribe aquí la decisión final..."></textarea>
+                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Publicar Decisión</button>
+                        </form>
+                    </div>
+                `;
+
+                    // Genera el HTML para el formulario de nuevo comentario (si la decisión no está cerrada).
+                    const newCommentFormHtml = !decision.finalDecision
+                        ? `
+                    <div>
+                        <hr/>
+                        <form id="new-comment-form" class="mt-6 space-y-4">
+                            <h3 class="text-lg font-semibold">Añadir Comentario</h3>
+                            <div>
+                                <label for="commenterName" class="block text-sm font-medium text-gray-700">Tu Nombre</label>
+                                <input type="text" id="commenterName" name="commenterName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" placeholder="Ej: Beto" />
+                            </div>
+                            <div>
+                                <label for="comment" class="block text-sm font-medium text-gray-700">Tu Comentario</label>
+                                <textarea id="comment" name="comment" required rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" placeholder="Aporta tu punto de vista..."></textarea>
+                            </div>
+                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">Enviar Comentario</button>
+                        </form>
+                    </div>
+                `
+                        : "";
+
+                    // Inserta todo el HTML generado en el contenedor de detalles.
+                    decisionDetailsEl.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow space-y-6">
+                        <div>
+                            <span class="text-sm text-gray-500">Capitán: ${decision.captain}</span>
+                            <h1 class="text-3xl font-bold text-gray-900 mt-1">${decision.title}</h1>
+                            <p class="text-gray-600 mt-4 whitespace-pre-wrap">${decision.description}</p>
+                            <p class="text-xs text-gray-400 mt-4">Propuesto: ${new Date(decision.timestamp).toLocaleString()}</p>
+                        </div>
+                        <hr/>
+                        ${finalDecisionHtml}
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Comentarios del Equipo</h3>
+                            <div class="space-y-4">${commentsHtml}</div>
+                        </div>
+                        ${newCommentFormHtml}
+                    </div>
+                `;
+                }
+
+                // --- MANEJADORES DE EVENTOS (Responden a las acciones del usuario) ---
+
+                // Se ejecuta cuando el usuario hace clic en la lista de decisiones.
+                decisionListEl.addEventListener("click", (e) => {
+                    const li = e.target.closest("li"); // Encuentra el elemento 'li' más cercano al clic.
+                    if (li && li.dataset.id) {
+                        selectedDecisionId = li.dataset.id; // Actualiza el ID seleccionado.
+                        rerender(); // Vuelve a dibujar toda la interfaz.
+                    }
+                });
+
+                // Se ejecuta cuando el usuario hace clic en cualquier parte del panel de detalles.
+                // Se usa para delegar eventos de los formularios y botones que se crean dinámicamente.
+                decisionDetailsEl.addEventListener("click", (e) => {
+                    const button = e.target.closest("button.like-button");
+                    if (button) {
+                        const commentId = button.dataset.commentId;
+                        const decision = decisions.find(
+                            (d) => d.id === selectedDecisionId,
+                        );
+                        const comment = decision.comments.find(
+                            (c) => c.id === commentId,
+                        );
+                        if (comment) {
+                            comment.likes++; // Incrementa los 'likes'.
+                            rerender(); // Vuelve a dibujar.
+                        }
+                    }
+                });
+
+                decisionDetailsEl.addEventListener("submit", (e) => {
+                    e.preventDefault(); // Evita que la página se recargue al enviar un formulario.
+
+                    // Si el formulario es para un nuevo comentario...
+                    if (e.target.id === "new-comment-form") {
+                        const formData = new FormData(e.target);
+                        const newComment = {
+                            id: `com-${crypto.randomUUID()}`,
+                            author: formData.get("commenterName"),
+                            text: formData.get("comment"),
+                            likes: 0,
+                            timestamp: new Date(),
+                        };
+                        const decision = decisions.find(
+                            (d) => d.id === selectedDecisionId,
+                        );
+                        decision.comments.push(newComment);
+                        rerender();
+                    }
+
+                    // Si el formulario es para la decisión final...
+                    if (e.target.id === "final-decision-form") {
+                        const formData = new FormData(e.target);
+                        const decision = decisions.find(
+                            (d) => d.id === selectedDecisionId,
+                        );
+                        decision.finalDecision = {
+                            text: formData.get("finalDecisionText"),
+                            timestamp: new Date(),
+                        };
+                        rerender();
+                    }
+                });
+
+                // Se ejecuta cuando se envía el formulario de nueva propuesta.
+                newDecisionForm.addEventListener("submit", (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const newDecision = {
+                        id: `dec-${crypto.randomUUID()}`,
+                        captain: formData.get("captainName"),
+                        title: formData.get("title"),
+                        description: formData.get("description"),
+                        comments: [],
+                        finalDecision: null,
+                        timestamp: new Date(),
+                    };
+                    decisions.unshift(newDecision); // Añade la nueva decisión al principio del array.
+                    selectedDecisionId = newDecision.id; // La selecciona automáticamente.
+                    e.target.reset(); // Limpia el formulario.
+                    rerender();
+                });
+
+                // --- FUNCIÓN PRINCIPAL DE RENDERIZADO ---
+                // Esta función central se llama cada vez que algo cambia.
+                function rerender() {
+                    renderDecisionList();
+                    renderSelectedDecision();
+                }
+
+                // --- INICIALIZACIÓN ---
+                // Dibuja la interfaz por primera vez cuando la página carga.
+                rerender();
+            });
+        </script>
+    </body>
+</html>
