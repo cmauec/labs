@@ -28,7 +28,6 @@ jobs:
 
       - name: Build project
         run: npm run build
-        working-directory: astro
 
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
@@ -36,4 +35,3 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }} --branch=main
-          workingDirectory: astro
