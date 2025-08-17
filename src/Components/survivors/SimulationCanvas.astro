@@ -159,12 +159,15 @@
             }
 
             // Remove excess survivors if needed
-            while (currentSurvivors > desiredSurvivors) {
+            let currentSurvivorCount = currentSurvivors;
+            while (currentSurvivorCount > desiredSurvivors) {
                 const survivorIndex = entities.findIndex((e) => e.isSurvivor);
                 if (survivorIndex !== -1) {
                     entities.splice(survivorIndex, 1);
+                    currentSurvivorCount--;
+                } else {
+                    break;
                 }
-                currentSurvivors--;
             }
 
             // Remove excess non-survivors if needed

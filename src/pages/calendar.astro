@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Generador de Calendario Personalizado</title>
+        <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet"
+        />
+        <style is:inline>
+            @import url("https://fonts.googleapis.com/css2?family=Anton&display=swap");
+
+            body {
+                background-image: url("/survivors/bg.webp");
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+                font-family: "Arial", sans-serif;
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+            }
+
+            .main-container {
+                width: 100%;
+                max-width: 1200px;
+                background-color: rgba(255, 255, 255, 0.6);
+                border-radius: 15px;
+                padding: 25px;
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+            }
+
+            .controls {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 25px;
+                color: #333;
+                flex-wrap: wrap;
+            }
+
+            .controls label {
+                font-weight: bold;
+            }
+
+            .controls select,
+            .controls input,
+            .controls button {
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid #ccc;
+                font-size: 16px;
+            }
+
+            .controls button {
+                background-color: #c41e3a;
+                color: white;
+                border: none;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+
+            .controls button:hover {
+                background-color: #b01710;
+            }
+
+            #custom-file-btn {
+                background-color: #36c17e;
+                color: white;
+            }
+
+            #custom-file-btn:hover {
+                background-color: #45a049;
+            }
+
+            #reset-bg {
+                background-color: #ff9800;
+                color: white;
+            }
+
+            #reset-bg:hover {
+                background-color: #e68900;
+            }
+
+            #calendar-container {
+                text-align: center;
+                background-color: transparent;
+            }
+
+            #calendar-title {
+                font-family: "Anton", sans-serif;
+                font-size: 4.5em;
+                letter-spacing: 2px;
+                margin: 0 0 20px 0;
+                font-weight: bold;
+                color: black;
+            }
+
+            .calendar-grid {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 15px 5px;
+            }
+
+            .grid-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 60px;
+            }
+
+            .day-name {
+                font-family: "Arial", sans-serif;
+                font-size: 2.2em;
+                font-weight: bold;
+                color: black;
+            }
+
+            .date-number {
+                font-family: "Arial", sans-serif;
+                font-size: 1.8em;
+                font-weight: bold;
+                line-height: 1;
+                color: black;
+            }
+
+            .date-circle {
+                width: 25px;
+                height: 25px;
+                border: 4px solid black;
+                border-radius: 50%;
+                margin-top: 8px;
+            }
+
+            @media print {
+                html,
+                body {
+                    height: 100%;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                body {
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                    background-size: cover;
+                    background-position: center;
+                }
+
+                .main-container {
+                    width: 100%;
+                    height: 100%;
+                    max-width: none;
+                    padding: 30px;
+                    box-sizing: border-box;
+                    border-radius: 0;
+                    box-shadow: none;
+                    background-color: rgba(255, 255, 255, 0.6) !important;
+                }
+
+                .controls {
+                    display: none;
+                }
+
+                #calendar-container {
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-around;
+                }
+
+                #calendar-title {
+                    font-size: 6em;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="main-container">
+            <div class="controls">
+                <label for="month">Mes:</label>
+                <select id="month-select"></select>
+                <label for="year">Año:</label>
+                <input type="number" id="year-input" min="1900" max="2100" />
+                <label for="background">Fondo:</label>
+                <button
+                    style="display: flex; align-items: center; justify-content: center; gap: 6px;"
+                    id="custom-file-btn"
+                    ><span class="material-icons">image</span> Seleccionar Imagen</button
+                >
+                <input
+                    type="file"
+                    id="background-input"
+                    accept="image/*"
+                    style="display: none;"
+                />
+                <button
+                    style="display: flex; align-items: center; justify-content: center; gap: 6px;"
+                    id="reset-bg"
+                >
+                    <span class="material-icons">refresh</span> Restaurar
+                </button>
+                <button
+                    style="display: flex; align-items: center; justify-content: center; gap: 6px;"
+                    onclick="window.print()"
+                >
+                    <span class="material-icons">print</span>
+                    <span>Imprimir Calendario</span>
+                </button>
+            </div>
+            <div id="calendar-container">
+                <!-- El calendario se generará aquí con JavaScript -->
+            </div>
+        </div>
+
+        <script is:inline>
+            const monthSelect = document.getElementById("month-select");
+            const yearInput = document.getElementById("year-input");
+            const backgroundInput = document.getElementById("background-input");
+            const customFileBtn = document.getElementById("custom-file-btn");
+            const resetBgButton = document.getElementById("reset-bg");
+            const calendarContainer =
+                document.getElementById("calendar-container");
+            const defaultBackground = "/survivors/bg-tech.webp";
+            const months_es = [
+                "Enero",
+                "Febrero",
+                "Marzo",
+                "Abril",
+                "Mayo",
+                "Junio",
+                "Julio",
+                "Agosto",
+                "Septiembre",
+                "Octubre",
+                "Noviembre",
+                "Diciembre",
+            ];
+            const days_es = ["L", "M", "M", "J", "V", "S", "D"];
+
+            function changeBackground(imageUrl) {
+                document.body.style.backgroundImage = `url("${imageUrl}")`;
+            }
+
+            function resetBackground() {
+                changeBackground(defaultBackground);
+                backgroundInput.value = "";
+            }
+
+            function generateCalendar(month, year) {
+                calendarContainer.innerHTML = "";
+                const title = document.createElement("h1");
+                title.id = "calendar-title";
+                title.textContent = `${months_es[month].toUpperCase()} ${year}`;
+                calendarContainer.appendChild(title);
+                const grid = document.createElement("div");
+                grid.className = "calendar-grid";
+                days_es.forEach((day) => {
+                    const dayNameCell = document.createElement("div");
+                    dayNameCell.className = "grid-item day-name";
+                    dayNameCell.textContent = day;
+                    grid.appendChild(dayNameCell);
+                });
+                const firstDayOfMonth = new Date(year, month, 1);
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const startDayIndex = (firstDayOfMonth.getDay() + 6) % 7;
+                for (let i = 0; i < startDayIndex; i++) {
+                    const emptyCell = document.createElement("div");
+                    emptyCell.className = "grid-item";
+                    grid.appendChild(emptyCell);
+                }
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayCell = document.createElement("div");
+                    dayCell.className = "grid-item";
+                    const numberSpan = document.createElement("span");
+                    numberSpan.className = "date-number";
+                    numberSpan.textContent = day;
+                    const circleDiv = document.createElement("div");
+                    circleDiv.className = "date-circle";
+                    dayCell.appendChild(numberSpan);
+                    dayCell.appendChild(circleDiv);
+                    grid.appendChild(dayCell);
+                }
+                calendarContainer.appendChild(grid);
+            }
+            function init() {
+                const today = new Date();
+                const currentMonth = today.getMonth();
+                const currentYear = today.getFullYear();
+                months_es.forEach((month, index) => {
+                    const option = document.createElement("option");
+                    option.value = index;
+                    option.textContent = month;
+                    monthSelect.appendChild(option);
+                });
+                monthSelect.value = currentMonth;
+                yearInput.value = currentYear;
+                generateCalendar(currentMonth, currentYear);
+                monthSelect.addEventListener("change", () => {
+                    generateCalendar(
+                        parseInt(monthSelect.value),
+                        parseInt(yearInput.value),
+                    );
+                });
+                yearInput.addEventListener("change", () => {
+                    generateCalendar(
+                        parseInt(monthSelect.value),
+                        parseInt(yearInput.value),
+                    );
+                });
+
+                backgroundInput.addEventListener("change", (e) => {
+                    const file = e.target.files[0];
+                    if (file && file.type.startsWith("image/")) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            changeBackground(e.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                customFileBtn.addEventListener("click", () => {
+                    backgroundInput.click();
+                });
+
+                resetBgButton.addEventListener("click", resetBackground);
+            }
+            document.addEventListener("DOMContentLoaded", init);
+        </script>
+    </body>
+</html>

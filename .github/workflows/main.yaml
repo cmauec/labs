@@ -1,52 +1,39 @@
-name: Build and Deploy to Cloud Run
+name: Deploy to Cloudflare Pages
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'astro/**'
+      - '.github/workflows/**'
 
 jobs:
-  deploy-to-cloud-run:
+  deploy:
     runs-on: ubuntu-latest
+    name: Deploy
+    permissions:
+      contents: read
+      deployments: write
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
 
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        filters: |
-          astro:
-            - 'astro/**'
+      - name: Build project
+        run: npm run build
+        working-directory: astro
 
-    - name: Authenticate with Google Cloud
-      uses: google-github-actions/auth@v0.4.0
-      with:
-        credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-
-    - name: Configure Docker to use the gcloud command-line tool as a credential helper
-      run: |-
-        gcloud auth configure-docker
-
-    - name: Build and Push Docker image Frontend
-      if: steps.filter.outputs.astro == 'true'
-      run: |-
-        gcloud builds submit --quiet --tag gcr.io/${{ secrets.GCP_PROJECT }}/${{ secrets.GCP_APPLICATION }}:$GITHUB_SHA ./astro
-
-    - name: Deploy to Cloud Run Frontend
-      if: steps.filter.outputs.astro == 'true'
-      run: |-
-        gcloud run deploy ${{ secrets.GCP_APPLICATION }} \
-          --image gcr.io/${{ secrets.GCP_PROJECT }}/${{ secrets.GCP_APPLICATION }}:$GITHUB_SHA \
-          --platform managed \
-          --region us-central1 \
-          --allow-unauthenticated \
-          --memory=512M \
-          --cpu=1 \
-          --concurrency=150 \
-          --timeout=300 \
-          --max-instances=1 \
-        
-
-    
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }} --branch=main
+          workingDirectory: astro
