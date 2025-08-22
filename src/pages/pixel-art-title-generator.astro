@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Generador de Títulos Pixel Art</title>
+
+        <!-- Tailwind CSS for styling -->
+        <script src="https://cdn.tailwindcss.com" is:inline></script>
+
+        <!-- Google Fonts for pixel art fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen&family=VT323&family=Pixelify+Sans&family=DotGothic16&display=swap"
+            rel="stylesheet"
+        />
+
+        <style>
+            /* Custom styles to ensure the app looks good */
+            body {
+                /* Default font, will be overridden by JS */
+                font-family: "Press Start 2P", cursive;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+
+            /* Custom styles for sliders */
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 20px;
+                height: 20px;
+                background: #4f46e5;
+                cursor: pointer;
+                border-radius: 50%;
+            }
+
+            input[type="range"]::-moz-range-thumb {
+                width: 20px;
+                height: 20px;
+                background: #4f46e5;
+                cursor: pointer;
+                border-radius: 50%;
+            }
+
+            /* Ensure canvas renders pixels sharply */
+            canvas {
+                image-rendering: -moz-crisp-edges;
+                image-rendering: -webkit-crisp-edges;
+                image-rendering: pixelated;
+                image-rendering: crisp-edges;
+            }
+
+            /* Styles for the code output section */
+            .code-block {
+                background-color: #1f2937;
+                border: 1px solid #374151;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                position: relative;
+            }
+
+            .code-block pre {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                color: #d1d5db;
+            }
+
+            .copy-btn {
+                position: absolute;
+                top: 0.5rem;
+                right: 0.5rem;
+                background-color: #4f46e5;
+                color: white;
+                border: none;
+                padding: 0.25rem 0.75rem;
+                border-radius: 0.375rem;
+                cursor: pointer;
+                font-size: 0.875rem;
+            }
+
+            .copy-btn:hover {
+                background-color: #4338ca;
+            }
+        </style>
+    </head>
+
+    <body
+        class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4"
+    >
+        <div
+            class="w-full max-w-4xl bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8"
+        >
+            <!-- Header -->
+            <div class="text-center mb-6">
+                <h1
+                    class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-500"
+                    id="main-title"
+                >
+                    Generador de Títulos Pixel Art
+                </h1>
+                <p class="text-gray-400 mt-2" style="font-family: sans-serif;">
+                    Crea y descarga títulos con estilo retro.
+                </p>
+            </div>
+
+            <!-- Canvas for displaying the title -->
+            <div
+                class="bg-gray-900/50 rounded-lg p-4 mb-6 border border-gray-700 flex items-center justify-center"
+                style="min-height: 200px;"
+            >
+                <canvas id="titleCanvas"></canvas>
+            </div>
+
+            <!-- Controls Area -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Left Column: Text and Size -->
+                <div class="space-y-6" style="font-family: sans-serif;">
+                    <div>
+                        <label
+                            for="textInput"
+                            class="block mb-2 text-sm font-medium text-gray-300"
+                            >Texto del Título</label
+                        >
+                        <input
+                            type="text"
+                            id="textInput"
+                            value="ROBOT"
+                            class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 placeholder-gray-400"
+                        />
+                    </div>
+                    <div>
+                        <label
+                            for="fontFamily"
+                            class="block mb-2 text-sm font-medium text-gray-300"
+                            >Estilo de Fuente</label
+                        >
+                        <select
+                            id="fontFamily"
+                            class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5"
+                        >
+                            <option value="'Press Start 2P'"
+                                >Press Start 2P</option
+                            >
+                            <option value="'Silkscreen'">Silkscreen</option>
+                            <option value="'VT323'">VT323</option>
+                            <option value="'Pixelify Sans'"
+                                >Pixelify Sans</option
+                            >
+                            <option value="'DotGothic16'">DotGothic16</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label
+                            for="fontSize"
+                            class="block mb-2 text-sm font-medium text-gray-300"
+                            >Tamaño de Fuente: <span id="fontSizeValue">50</span
+                            >px</label
+                        >
+                        <input
+                            type="range"
+                            id="fontSize"
+                            min="10"
+                            max="100"
+                            value="50"
+                            class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                        />
+                    </div>
+                    <div>
+                        <label
+                            for="letterSpacing"
+                            class="block mb-2 text-sm font-medium text-gray-300"
+                            >Espaciado de Letra:
+                            <span id="letterSpacingValue">-2</span>px</label
+                        >
+                        <input
+                            type="range"
+                            id="letterSpacing"
+                            min="-10"
+                            max="20"
+                            value="-2"
+                            class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                        />
+                    </div>
+                    <div>
+                        <label
+                            for="wordSpacing"
+                            class="block mb-2 text-sm font-medium text-gray-300"
+                            >Espaciado de Palabra:
+                            <span id="wordSpacingValue">0</span>px</label
+                        >
+                        <input
+                            type="range"
+                            id="wordSpacing"
+                            min="-50"
+                            max="50"
+                            value="0"
+                            class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                        />
+                    </div>
+                    <div>
+                        <label
+                            for="verticalScale"
+                            class="block mb-2 text-sm font-medium text-gray-300"
+                            >Altura de Letra:
+                            <span id="verticalScaleValue">1.10</span>x</label
+                        >
+                        <input
+                            type="range"
+                            id="verticalScale"
+                            min="1.0"
+                            max="2.0"
+                            value="1.1"
+                            step="0.05"
+                            class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                        />
+                    </div>
+                </div>
+
+                <!-- Right Column: Colors -->
+                <div class="space-y-6" style="font-family: sans-serif;">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label
+                                for="colorStart"
+                                class="block mb-2 text-sm font-medium text-gray-300"
+                                >Color Inicio</label
+                            >
+                            <input
+                                type="color"
+                                id="colorStart"
+                                value="#3b82f6"
+                                class="p-1 h-10 w-full block bg-gray-700 border border-gray-600 cursor-pointer rounded-lg"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                for="colorEnd"
+                                class="block mb-2 text-sm font-medium text-gray-300"
+                                >Color Fin</label
+                            >
+                            <input
+                                type="color"
+                                id="colorEnd"
+                                value="#ec4899"
+                                class="p-1 h-10 w-full block bg-gray-700 border border-gray-600 cursor-pointer rounded-lg"
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            for="shadowColor"
+                            class="block mb-2 text-sm font-medium text-gray-300"
+                            >Color de Sombra</label
+                        >
+                        <input
+                            type="color"
+                            id="shadowColor"
+                            value="#4c1d95"
+                            class="p-1 h-10 w-full block bg-gray-700 border border-gray-600 cursor-pointer rounded-lg"
+                        />
+                    </div>
+                    <div>
+                        <label
+                            for="shadowPattern"
+                            class="block mb-2 text-sm font-medium text-gray-300"
+                            >Patrón de Sombra</label
+                        >
+                        <select
+                            id="shadowPattern"
+                            class="w-full bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5"
+                        >
+                            <option value="outline">Borde Simple</option>
+                            <option value="dithered">Dithered (Tablero)</option>
+                            <option value="solid">Sólido</option>
+                            <option value="horizontal"
+                                >Líneas Horizontales</option
+                            >
+                            <option value="vertical">Líneas Verticales</option>
+                            <option value="diagonal1">Diagonal (Der)</option>
+                            <option value="diagonal2">Diagonal (Izq)</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label
+                                for="shadowX"
+                                class="block mb-2 text-sm font-medium text-gray-300"
+                                >Sombra X: <span id="shadowXValue">4</span
+                                >px</label
+                            >
+                            <input
+                                type="range"
+                                id="shadowX"
+                                min="-20"
+                                max="20"
+                                value="4"
+                                class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                for="shadowY"
+                                class="block mb-2 text-sm font-medium text-gray-300"
+                                >Sombra Y: <span id="shadowYValue">4</span
+                                >px</label
+                            >
+                            <input
+                                type="range"
+                                id="shadowY"
+                                min="-20"
+                                max="20"
+                                value="4"
+                                class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-8 text-center">
+                <button
+                    id="downloadBtn"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-500/50"
+                    style="font-family: sans-serif;"
+                >
+                    Descargar PNG
+                </button>
+            </div>
+
+            <!-- Code Output Section -->
+            <div class="mt-8" style="font-family: sans-serif;">
+                <div class="code-block">
+                    <h3 class="text-lg font-semibold text-gray-200 mb-2">
+                        Código Generado
+                    </h3>
+                    <div class="code-block">
+                        <h4 class="text-md font-semibold text-gray-300 mb-2">
+                            HTML
+                        </h4>
+                        <button class="copy-btn" onclick="copyCode('htmlCode')"
+                            >Copiar</button
+                        >
+                        <pre><code id="htmlCode" /></pre>
+                    </div>
+                    <div class="code-block mt-4">
+                        <h4 class="text-md font-semibold text-gray-300 mb-2">
+                            CSS
+                        </h4>
+                        <button class="copy-btn" onclick="copyCode('cssCode')"
+                            >Copiar</button
+                        >
+                        <pre><code id="cssCode" /></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer
+            class="text-center mt-8 text-gray-500 text-sm"
+            style="font-family: sans-serif;"
+        >
+            <p>Desarrollado con asistencia de IA 🤖</p>
+        </footer>
+
+        <script is:inline>
+            // --- Copy to Clipboard Function ---
+            function copyCode(elementId) {
+                const codeElement = document.getElementById(elementId);
+                const textToCopy = codeElement.textContent;
+
+                // Use modern clipboard API if available, with a fallback
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard
+                        .writeText(textToCopy)
+                        .then(() => {
+                            alert("¡Código copiado!");
+                        })
+                        .catch((err) => {
+                            console.warn(
+                                "Fallo al copiar con la API moderna",
+                                err,
+                            );
+                            fallbackCopyTextToClipboard(textToCopy);
+                        });
+                } else {
+                    fallbackCopyTextToClipboard(textToCopy);
+                }
+            }
+
+            function fallbackCopyTextToClipboard(text) {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    const successful = document.execCommand("copy");
+                    if (successful) {
+                        alert("¡Código copiado!");
+                    } else {
+                        alert("¡Fallo al copiar el código!");
+                    }
+                } catch (err) {
+                    console.error("Fallback: Oops, unable to copy", err);
+                    alert("¡Fallo al copiar el código!");
+                }
+                document.body.removeChild(textArea);
+            }
+
+            // Wait for the window to load to ensure fonts are ready
+            window.onload = function () {
+                // --- DOM Element Selection ---
+                const canvas = document.getElementById("titleCanvas");
+                const ctx = canvas.getContext("2d");
+                const textInput = document.getElementById("textInput");
+                const fontFamilySelect = document.getElementById("fontFamily");
+                const fontSizeSlider = document.getElementById("fontSize");
+                const fontSizeValue = document.getElementById("fontSizeValue");
+                const letterSpacingSlider =
+                    document.getElementById("letterSpacing");
+                const letterSpacingValue =
+                    document.getElementById("letterSpacingValue");
+                const wordSpacingSlider =
+                    document.getElementById("wordSpacing");
+                const wordSpacingValue =
+                    document.getElementById("wordSpacingValue");
+                const verticalScaleSlider =
+                    document.getElementById("verticalScale");
+                const verticalScaleValue =
+                    document.getElementById("verticalScaleValue");
+                const colorStartInput = document.getElementById("colorStart");
+                const colorEndInput = document.getElementById("colorEnd");
+                const shadowColorInput = document.getElementById("shadowColor");
+                const shadowPatternSelect =
+                    document.getElementById("shadowPattern");
+                const shadowXSlider = document.getElementById("shadowX");
+                const shadowXValue = document.getElementById("shadowXValue");
+                const shadowYSlider = document.getElementById("shadowY");
+                const shadowYValue = document.getElementById("shadowYValue");
+                const downloadBtn = document.getElementById("downloadBtn");
+                const mainTitle = document.getElementById("main-title");
+                const htmlCodeEl = document.getElementById("htmlCode");
+                const cssCodeEl = document.getElementById("cssCode");
+
+                // --- Configuration Object ---
+                let config = {
+                    text: textInput.value.toUpperCase(),
+                    fontFamily: fontFamilySelect.value,
+                    fontSize: parseInt(fontSizeSlider.value),
+                    letterSpacing: parseInt(letterSpacingSlider.value),
+                    wordSpacing: parseInt(wordSpacingSlider.value),
+                    verticalScale: parseFloat(verticalScaleSlider.value),
+                    colorStart: colorStartInput.value,
+                    colorEnd: colorEndInput.value,
+                    shadowColor: shadowColorInput.value,
+                    shadowPattern: shadowPatternSelect.value,
+                    shadowX: parseInt(shadowXSlider.value),
+                    shadowY: parseInt(shadowYSlider.value),
+                };
+
+                // --- Main Drawing Function ---
+                function drawTitle(targetCanvas, targetCtx, scale = 1) {
+                    // ... (drawing logic remains the same)
+                    targetCtx.clearRect(
+                        0,
+                        0,
+                        targetCanvas.width,
+                        targetCanvas.height,
+                    );
+                    targetCtx.imageSmoothingEnabled = false;
+                    const scaledFontSize = config.fontSize * scale;
+                    targetCtx.font = `${scaledFontSize}px ${config.fontFamily}`;
+                    targetCtx.letterSpacing = `${config.letterSpacing * scale}px`;
+                    targetCtx.wordSpacing = `${config.wordSpacing * scale}px`;
+                    targetCtx.textAlign = "center";
+                    targetCtx.textBaseline = "middle";
+                    targetCtx.lineJoin = "miter";
+                    const x = targetCanvas.width / 2;
+                    const y = targetCanvas.height / 2;
+                    const textMetrics = targetCtx.measureText(config.text);
+                    const textWidth = textMetrics.width;
+                    targetCtx.save();
+                    targetCtx.translate(
+                        x + config.shadowX * scale,
+                        y + config.shadowY * scale,
+                    );
+                    targetCtx.scale(1, config.verticalScale);
+                    if (config.shadowPattern === "outline") {
+                        targetCtx.strokeStyle = config.shadowColor;
+                        targetCtx.lineWidth = 2 * scale;
+                        targetCtx.strokeText(config.text, 0, 0);
+                    } else {
+                        const patternCanvas = document.createElement("canvas");
+                        const patternCtx = patternCanvas.getContext("2d");
+                        const patternSize = 4 * scale;
+                        patternCanvas.width = patternSize;
+                        patternCanvas.height = patternSize;
+                        patternCtx.fillStyle = config.shadowColor;
+                        switch (config.shadowPattern) {
+                            case "solid":
+                                patternCtx.fillRect(
+                                    0,
+                                    0,
+                                    patternSize,
+                                    patternSize,
+                                );
+                                break;
+                            case "horizontal":
+                                patternCtx.fillRect(
+                                    0,
+                                    0,
+                                    patternSize,
+                                    patternSize / 2,
+                                );
+                                break;
+                            case "vertical":
+                                patternCtx.fillRect(
+                                    0,
+                                    0,
+                                    patternSize / 2,
+                                    patternSize,
+                                );
+                                break;
+                            case "diagonal1":
+                                patternCtx.beginPath();
+                                patternCtx.moveTo(0, 0);
+                                patternCtx.lineTo(patternSize, 0);
+                                patternCtx.lineTo(0, patternSize);
+                                patternCtx.closePath();
+                                patternCtx.fill();
+                                break;
+                            case "diagonal2":
+                                patternCtx.beginPath();
+                                patternCtx.moveTo(patternSize, 0);
+                                patternCtx.lineTo(patternSize, patternSize);
+                                patternCtx.lineTo(0, patternSize);
+                                patternCtx.closePath();
+                                patternCtx.fill();
+                                break;
+                            default:
+                                patternCtx.fillRect(
+                                    0,
+                                    0,
+                                    patternSize / 2,
+                                    patternSize / 2,
+                                );
+                                patternCtx.fillRect(
+                                    patternSize / 2,
+                                    patternSize / 2,
+                                    patternSize / 2,
+                                    patternSize / 2,
+                                );
+                                break;
+                        }
+                        const shadowPattern = targetCtx.createPattern(
+                            patternCanvas,
+                            "repeat",
+                        );
+                        targetCtx.fillStyle = shadowPattern;
+                        targetCtx.fillText(config.text, 0, 0);
+                    }
+                    targetCtx.restore();
+                    targetCtx.save();
+                    targetCtx.translate(x, y);
+                    targetCtx.scale(1, config.verticalScale);
+                    const gradient = targetCtx.createLinearGradient(
+                        -textWidth / 2,
+                        0,
+                        textWidth / 2,
+                        0,
+                    );
+                    gradient.addColorStop(0, config.colorStart);
+                    gradient.addColorStop(1, config.colorEnd);
+                    targetCtx.fillStyle = gradient;
+                    targetCtx.fillText(config.text, 0, 0);
+                    targetCtx.restore();
+                }
+
+                // --- Code Generation ---
+                function generateCode() {
+                    const text = config.text.replace(/'/g, "\\'"); // Escape single quotes
+                    const htmlString = `<h1 class="pixel-title" data-text='${text}'>${text}</h1>`;
+
+                    let shadowCss = "";
+                    if (config.shadowPattern === "outline") {
+                        shadowCss = `  -webkit-text-stroke: 2px ${config.shadowColor};\n  text-stroke: 2px ${config.shadowColor};`;
+                    } else {
+                        // For other patterns, we use a pseudo-element
+                        shadowCss = `  color: ${config.shadowColor};`;
+                    }
+
+                    const cssString = `
+/* Import the font in your main CSS file: */
+/* @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen&family=VT323&family=Pixelify+Sans&family=DotGothic16&display=swap'); */
+
+.pixel-title {
+  position: relative;
+  font-family: ${config.fontFamily}, cursive;
+  font-size: ${config.fontSize}px;
+  letter-spacing: ${config.letterSpacing}px;
+  word-spacing: ${config.wordSpacing}px;
+  transform: scaleY(${config.verticalScale});
+  
+  /* Main text gradient */
+  background: linear-gradient(to right, ${config.colorStart}, ${config.colorEnd});
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.pixel-title::before {
+  content: attr(data-text);
+  position: absolute;
+  left: ${config.shadowX}px;
+  top: ${config.shadowY}px;
+  z-index: -1;
+  
+  /* Shadow style */
+${shadowCss}
+}`;
+                    htmlCodeEl.textContent = htmlString;
+                    cssCodeEl.textContent = cssString.trim();
+                }
+
+                // --- Canvas Resizing and Initial Draw ---
+                function resizeAndDraw() {
+                    // ... (resize logic remains the same)
+                    fontSizeValue.textContent = config.fontSize;
+                    letterSpacingValue.textContent = config.letterSpacing;
+                    wordSpacingValue.textContent = config.wordSpacing;
+                    verticalScaleValue.textContent =
+                        config.verticalScale.toFixed(2);
+                    shadowXValue.textContent = config.shadowX;
+                    shadowYValue.textContent = config.shadowY;
+                    mainTitle.style.fontFamily = config.fontFamily;
+                    ctx.font = `${config.fontSize}px ${config.fontFamily}`;
+                    ctx.letterSpacing = `${config.letterSpacing}px`;
+                    ctx.wordSpacing = `${config.wordSpacing}px`;
+                    const textMetrics = ctx.measureText(config.text);
+                    const textWidth = textMetrics.width;
+                    const outlineWidth =
+                        config.shadowPattern === "outline" ? 2 : 0;
+                    const scaledTextHeight =
+                        config.fontSize * 1.5 * config.verticalScale;
+                    const totalHeight =
+                        scaledTextHeight +
+                        Math.abs(config.shadowY) +
+                        outlineWidth;
+                    canvas.height = totalHeight;
+                    const totalWidth =
+                        textWidth +
+                        Math.abs(config.shadowX) +
+                        config.fontSize * 0.5 +
+                        outlineWidth;
+                    canvas.width = totalWidth;
+
+                    // Redraw the title and generate code
+                    drawTitle(canvas, ctx);
+                    generateCode();
+                }
+
+                // --- Event Listeners ---
+                function setupEventListeners() {
+                    // All event listeners call resizeAndDraw() or drawTitle() + generateCode()
+                    textInput.addEventListener("input", (e) => {
+                        config.text = e.target.value.toUpperCase();
+                        resizeAndDraw();
+                    });
+                    fontFamilySelect.addEventListener("input", (e) => {
+                        config.fontFamily = e.target.value;
+                        resizeAndDraw();
+                    });
+                    fontSizeSlider.addEventListener("input", (e) => {
+                        config.fontSize = parseInt(e.target.value);
+                        resizeAndDraw();
+                    });
+                    letterSpacingSlider.addEventListener("input", (e) => {
+                        config.letterSpacing = parseInt(e.target.value);
+                        resizeAndDraw();
+                    });
+                    wordSpacingSlider.addEventListener("input", (e) => {
+                        config.wordSpacing = parseInt(e.target.value);
+                        resizeAndDraw();
+                    });
+                    verticalScaleSlider.addEventListener("input", (e) => {
+                        config.verticalScale = parseFloat(e.target.value);
+                        resizeAndDraw();
+                    });
+                    shadowXSlider.addEventListener("input", (e) => {
+                        config.shadowX = parseInt(e.target.value);
+                        resizeAndDraw();
+                    });
+                    shadowYSlider.addEventListener("input", (e) => {
+                        config.shadowY = parseInt(e.target.value);
+                        resizeAndDraw();
+                    });
+                    shadowPatternSelect.addEventListener("input", (e) => {
+                        config.shadowPattern = e.target.value;
+                        resizeAndDraw();
+                    });
+                    colorStartInput.addEventListener("input", (e) => {
+                        config.colorStart = e.target.value;
+                        drawTitle(canvas, ctx);
+                        generateCode();
+                    });
+                    colorEndInput.addEventListener("input", (e) => {
+                        config.colorEnd = e.target.value;
+                        drawTitle(canvas, ctx);
+                        generateCode();
+                    });
+                    shadowColorInput.addEventListener("input", (e) => {
+                        config.shadowColor = e.target.value;
+                        drawTitle(canvas, ctx);
+                        generateCode();
+                    });
+                    downloadBtn.addEventListener("click", downloadHighRes);
+                }
+
+                // --- High-Resolution Download Function ---
+                function downloadHighRes() {
+                    // ... (download logic remains the same)
+                    const scaleFactor = 4;
+                    const tempCanvas = document.createElement("canvas");
+                    const tempCtx = tempCanvas.getContext("2d");
+                    tempCtx.font = `${config.fontSize * scaleFactor}px ${config.fontFamily}`;
+                    tempCtx.letterSpacing = `${config.letterSpacing * scaleFactor}px`;
+                    tempCtx.wordSpacing = `${config.wordSpacing * scaleFactor}px`;
+                    const textMetrics = tempCtx.measureText(config.text);
+                    const textWidth = textMetrics.width;
+                    const outlineWidth =
+                        config.shadowPattern === "outline"
+                            ? 2 * scaleFactor
+                            : 0;
+                    const scaledTextHeight =
+                        config.fontSize *
+                        scaleFactor *
+                        1.5 *
+                        config.verticalScale;
+                    const totalHeight =
+                        scaledTextHeight +
+                        Math.abs(config.shadowY * scaleFactor) +
+                        outlineWidth;
+                    tempCanvas.height = totalHeight;
+                    const totalWidth =
+                        textWidth +
+                        Math.abs(config.shadowX * scaleFactor) +
+                        config.fontSize * scaleFactor * 0.5 +
+                        outlineWidth;
+                    tempCanvas.width = totalWidth;
+                    drawTitle(tempCanvas, tempCtx, scaleFactor);
+                    const link = document.createElement("a");
+                    link.download = `${config.text.toLowerCase().replace(/ /g, "_")}_titulo_pixel.png`;
+                    link.href = tempCanvas.toDataURL("image/png");
+                    link.click();
+                }
+
+                // --- Initialize ---
+                resizeAndDraw();
+                setupEventListeners();
+            };
+        </script>
+    </body>
+</html>
