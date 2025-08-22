@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Práctica de Escritura</title>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&family=Indie+Flower&family=Luckiest+Guy&family=Roboto:wght@400;700&display=swap");
+        </style>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Comic Relief", system-ui;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                padding: 20px;
+                font-weight: 700;
+                gap: 20px;
+            }
+
+            .main-container {
+                display: flex;
+                gap: 20px;
+                max-width: 1400px;
+                width: 100%;
+            }
+
+            .container {
+                background: white;
+                border-radius: 20px;
+                padding: 30px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                flex: 2;
+            }
+
+            .history-container {
+                background: white;
+                border-radius: 20px;
+                padding: 20px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                flex: 1;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+
+            h1 {
+                text-align: center;
+                color: #4a5568;
+                margin-bottom: 30px;
+                font-size: 2rem;
+            }
+
+            .sentence-display {
+                background: #f7fafc;
+                border: 3px solid #e2e8f0;
+                border-radius: 15px;
+                padding: 20px;
+                margin-bottom: 30px;
+                text-align: center;
+                font-size: 2.5rem;
+                font-weight: bold;
+                letter-spacing: 3px;
+                min-height: 80px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .letter {
+                display: inline-block;
+                transition: all 0.3s ease;
+                padding: 5px;
+                border-radius: 8px;
+            }
+
+            .letter.completed {
+                background: linear-gradient(45deg, #48bb78, #38a169);
+                color: white;
+                transform: scale(1.1);
+                box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+            }
+
+            .letter.current {
+                background: linear-gradient(45deg, #ed8936, #dd6b20);
+                color: white;
+                animation: pulse 1s infinite;
+                transform: scale(1.2);
+            }
+
+            @keyframes pulse {
+                0% {
+                    transform: scale(1.2);
+                }
+
+                50% {
+                    transform: scale(1.3);
+                }
+
+                100% {
+                    transform: scale(1.2);
+                }
+            }
+
+            .input-section {
+                margin-bottom: 30px;
+            }
+
+            .input-area {
+                width: 100%;
+                font-size: 2rem;
+                padding: 15px;
+                border: 3px solid #cbd5e0;
+                border-radius: 10px;
+                font-family: "Comic Relief", system-ui;
+                background: #f7fafc;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                text-align: center;
+            }
+
+            .input-area:focus {
+                outline: none;
+                border-color: #4299e1;
+                box-shadow: 0 0 10px rgba(66, 153, 225, 0.3);
+            }
+
+            .keyboard-helper {
+                background: #2d3748;
+                border-radius: 15px;
+                padding: 20px;
+                margin-top: 20px;
+            }
+
+            .keyboard-title {
+                color: white;
+                text-align: center;
+                margin-bottom: 15px;
+                font-size: 1.2rem;
+            }
+
+            .keyboard-row {
+                display: flex;
+                justify-content: center;
+                gap: 5px;
+                margin-bottom: 8px;
+            }
+
+            .key {
+                background: #4a5568;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 12px;
+                font-size: 1.1rem;
+                font-weight: bold;
+                min-width: 45px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-family: "Comic Relief", system-ui;
+            }
+
+            .key:hover {
+                background: #718096;
+                transform: translateY(-2px);
+            }
+
+            .key.highlight {
+                background: linear-gradient(45deg, #f56565, #e53e3e);
+                animation: glow 1s infinite alternate;
+                transform: scale(1.2);
+                box-shadow: 0 0 20px rgba(245, 101, 101, 0.6);
+            }
+
+            .key.space {
+                min-width: 200px;
+            }
+
+            @keyframes glow {
+                from {
+                    box-shadow: 0 0 20px rgba(245, 101, 101, 0.6);
+                }
+
+                to {
+                    box-shadow: 0 0 30px rgba(245, 101, 101, 0.9);
+                }
+            }
+
+            .controls {
+                text-align: center;
+                margin-top: 20px;
+            }
+
+            .btn {
+                background: linear-gradient(45deg, #4299e1, #3182ce);
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                font-size: 1.1rem;
+                border-radius: 10px;
+                cursor: pointer;
+                margin: 0 10px;
+                transition: all 0.3s ease;
+                font-family: "Roboto", sans-serif;
+            }
+
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(66, 153, 225, 0.4);
+            }
+
+            .progress {
+                text-align: center;
+                margin-top: 20px;
+                font-size: 1.2rem;
+                color: #4a5568;
+            }
+
+            .timer {
+                text-align: center;
+                margin-top: 15px;
+                font-size: 1.4rem;
+                color: #2d3748;
+                background: linear-gradient(45deg, #ffd89b, #19547b);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                font-weight: bold;
+            }
+
+            .time-record {
+                text-align: center;
+                margin-top: 10px;
+                font-size: 1rem;
+                color: #718096;
+                background: #f7fafc;
+                padding: 10px;
+                border-radius: 10px;
+                border: 2px solid #e2e8f0;
+            }
+
+            .celebration {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(45deg, #48bb78, #38a169);
+                color: white;
+                padding: 30px;
+                border-radius: 20px;
+                font-size: 2rem;
+                z-index: 1000;
+                text-align: center;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                display: none;
+            }
+
+            .history-title {
+                text-align: center;
+                color: #4a5568;
+                margin-bottom: 20px;
+                font-size: 1.5rem;
+                border-bottom: 3px solid #e2e8f0;
+                padding-bottom: 10px;
+            }
+
+            .history-item {
+                background: linear-gradient(45deg, #f7fafc, #edf2f7);
+                border: 2px solid #e2e8f0;
+                border-radius: 15px;
+                padding: 15px;
+                margin-bottom: 15px;
+                transition: all 0.3s ease;
+            }
+
+            .history-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            }
+
+            .history-sentence {
+                font-size: 1.1rem;
+                font-weight: bold;
+                color: #2d3748;
+                margin-bottom: 8px;
+                text-align: center;
+            }
+
+            .history-time {
+                font-size: 0.9rem;
+                color: #718096;
+                text-align: center;
+                background: linear-gradient(45deg, #4299e1, #3182ce);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 20px;
+                display: inline-block;
+            }
+
+            .history-empty {
+                text-align: center;
+                color: #a0aec0;
+                font-style: italic;
+                margin-top: 50px;
+            }
+
+            @media (max-width: 1200px) {
+                .main-container {
+                    flex-direction: column;
+                }
+
+                .history-container {
+                    max-height: 300px;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="main-container">
+            <div class="container">
+                <h1>🌟 Práctica de Escritura 🌟</h1>
+
+                <div class="sentence-display" id="sentenceDisplay"></div>
+
+                <div class="input-section">
+                    <input
+                        type="text"
+                        class="input-area"
+                        id="inputArea"
+                        placeholder="Escribe aquí..."
+                        autocomplete="off"
+                    />
+                </div>
+
+                <div class="keyboard-helper">
+                    <div class="keyboard-title">🎯 Encuentra esta tecla:</div>
+                    <div class="keyboard-row">
+                        <button class="key" data-key="Q">Q</button>
+                        <button class="key" data-key="W">W</button>
+                        <button class="key" data-key="E">E</button>
+                        <button class="key" data-key="R">R</button>
+                        <button class="key" data-key="T">T</button>
+                        <button class="key" data-key="Y">Y</button>
+                        <button class="key" data-key="U">U</button>
+                        <button class="key" data-key="I">I</button>
+                        <button class="key" data-key="O">O</button>
+                        <button class="key" data-key="P">P</button>
+                        <button class="key" data-key="P">[</button>
+                        <button class="key" data-key="P">]</button>
+                    </div>
+                    <div class="keyboard-row">
+                        <button class="key" data-key="A">A</button>
+                        <button class="key" data-key="S">S</button>
+                        <button class="key" data-key="D">D</button>
+                        <button class="key" data-key="F">F</button>
+                        <button class="key" data-key="G">G</button>
+                        <button class="key" data-key="H">H</button>
+                        <button class="key" data-key="J">J</button>
+                        <button class="key" data-key="K">K</button>
+                        <button class="key" data-key="L">L</button>
+                        <button class="key" data-key="K">;</button>
+                        <button class="key" data-key="L">'</button>
+                    </div>
+                    <div class="keyboard-row">
+                        <button class="key" data-key="Z">Z</button>
+                        <button class="key" data-key="X">X</button>
+                        <button class="key" data-key="C">C</button>
+                        <button class="key" data-key="V">V</button>
+                        <button class="key" data-key="B">B</button>
+                        <button class="key" data-key="N">N</button>
+                        <button class="key" data-key="M">M</button>
+                        <button class="key" data-key="M">,</button>
+                        <button class="key" data-key="M">.</button>
+                        <button class="key" data-key="M">/</button>
+                    </div>
+                    <div class="keyboard-row">
+                        <button class="key space" data-key=" ">ESPACIO</button>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn" onclick="newSentence()"
+                        >📝 Nueva Oración</button
+                    >
+                    <button class="btn" onclick="resetProgress()"
+                        >🔄 Reiniciar</button
+                    >
+                    <button class="btn" onclick="speakSentence()"
+                        >🔊 Repetir Frase</button
+                    >
+                </div>
+
+                <div class="progress" id="progress">¡Empieza a escribir!</div>
+                <div class="timer" id="timer">00:00</div>
+                <div class="time-record" id="timeRecord">
+                    Tiempo transcurrido: 0 segundos
+                </div>
+            </div>
+
+            <div class="history-container">
+                <div class="history-title">📋 Frases Completadas</div>
+                <div id="historyList">
+                    <div class="history-empty">
+                        ¡Completa tu primera frase para verla aquí!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="celebration" id="celebration">
+            🎉 ¡Excelente trabajo! 🎉<br />
+            <small>¡Has completado la oración!</small>
+        </div>
+
+        <script>
+            const sentences = [
+                "EL GATO COME",
+                "ME GUSTA JUGAR",
+                "EL SOL BRILLA",
+                "MAMA ME AMA",
+                "VOY AL PARQUE",
+                "TENGO UN PERRO",
+                "LA CASA ES AZUL",
+                "COMO FRUTAS",
+                "LEO UN LIBRO",
+                "JUEGO CON PELOTAS",
+            ];
+
+            let currentSentence = "";
+            let currentPosition = 0;
+            let userInput = "";
+            let startTime = 0;
+            let timer = null;
+            let completedSentences = []; // Array para almacenar frases completadas
+            let availableSentences = [...sentences]; // Copia de las frases disponibles
+
+            const sentenceDisplay = document.getElementById("sentenceDisplay");
+            const inputArea = document.getElementById("inputArea");
+            const progress = document.getElementById("progress");
+            const celebration = document.getElementById("celebration");
+            const timerDisplay = document.getElementById("timer");
+            const timeRecord = document.getElementById("timeRecord");
+            const historyList = document.getElementById("historyList");
+
+            function initializeApp() {
+                // Cargar las voces disponibles
+                if ("speechSynthesis" in window) {
+                    // Las voces pueden no estar disponibles inmediatamente
+                    speechSynthesis.addEventListener("voiceschanged", () => {
+                        console.log("Voces cargadas");
+                    });
+                }
+
+                newSentence();
+                inputArea.addEventListener("input", handleInput);
+                inputArea.addEventListener("keydown", preventBackspace);
+
+                // Hacer clic en las teclas del teclado virtual
+                document.querySelectorAll(".key").forEach((key) => {
+                    key.addEventListener("click", () => {
+                        const letter = key.dataset.key;
+                        simulateKeyPress(letter);
+                    });
+                });
+
+                // Enfocar la caja de texto al iniciar
+                setTimeout(() => {
+                    inputArea.focus();
+                }, 1500);
+            }
+
+            function newSentence() {
+                // Si no hay frases disponibles, mostrar mensaje de finalización
+                if (availableSentences.length === 0) {
+                    showAllCompletedMessage();
+                    return;
+                }
+
+                // Seleccionar una frase aleatoria de las disponibles
+                const randomIndex = Math.floor(
+                    Math.random() * availableSentences.length,
+                );
+                currentSentence = availableSentences[randomIndex];
+
+                currentPosition = 0;
+                userInput = "";
+                inputArea.value = "";
+                displaySentence();
+                updateKeyboardHighlight();
+                updateProgress();
+                speakSentence();
+
+                // Enfocar automáticamente la caja de texto
+                setTimeout(() => {
+                    inputArea.focus();
+                }, 1000); // Esperar un poco para que termine de hablar la frase
+
+                startTime = Date.now();
+                if (timer) {
+                    clearInterval(timer);
+                }
+                timer = setInterval(updateTimer, 100);
+            }
+
+            function speakSentence() {
+                if ("speechSynthesis" in window) {
+                    const utterance = new SpeechSynthesisUtterance(
+                        currentSentence,
+                    );
+                    utterance.rate = 0.7; // Velocidad más lenta
+                    utterance.pitch = 1.3; // Tono más agudo para voz infantil
+                    utterance.volume = 0.8;
+
+                    // Intentar encontrar una voz femenina o infantil
+                    const voices = speechSynthesis.getVoices();
+                    const childVoice = voices.find(
+                        (voice) =>
+                            voice.name.includes("child") ||
+                            voice.name.includes("niña") ||
+                            voice.name.includes("niño") ||
+                            (voice.gender === "female" &&
+                                voice.lang.startsWith("es")),
+                    );
+
+                    if (childVoice) {
+                        utterance.voice = childVoice;
+                    } else {
+                        // Buscar cualquier voz en español
+                        const spanishVoice = voices.find((voice) =>
+                            voice.lang.startsWith("es"),
+                        );
+                        if (spanishVoice) {
+                            utterance.voice = spanishVoice;
+                        }
+                    }
+
+                    speechSynthesis.speak(utterance);
+                }
+            }
+
+            function speakCelebration() {
+                if ("speechSynthesis" in window) {
+                    const messages = [
+                        "¡Muy bien! ¡Excelente trabajo!",
+                        "¡Fantástico! ¡Lo hiciste genial!",
+                        "¡Increíble! ¡Eres muy inteligente!",
+                        "¡Perfecto! ¡Sigue así!",
+                        "¡Bravo! ¡Qué bien escribes!",
+                    ];
+
+                    const randomMessage =
+                        messages[Math.floor(Math.random() * messages.length)];
+                    const utterance = new SpeechSynthesisUtterance(
+                        randomMessage,
+                    );
+                    utterance.rate = 0.8;
+                    utterance.pitch = 1.4; // Tono más agudo para sonar más infantil
+                    utterance.volume = 0.9;
+
+                    // Usar la misma configuración de voz que para las oraciones
+                    const voices = speechSynthesis.getVoices();
+                    const childVoice = voices.find(
+                        (voice) =>
+                            voice.name.includes("child") ||
+                            voice.name.includes("niña") ||
+                            voice.name.includes("niño") ||
+                            (voice.gender === "female" &&
+                                voice.lang.startsWith("es")),
+                    );
+
+                    if (childVoice) {
+                        utterance.voice = childVoice;
+                    } else {
+                        const spanishVoice = voices.find((voice) =>
+                            voice.lang.startsWith("es"),
+                        );
+                        if (spanishVoice) {
+                            utterance.voice = spanishVoice;
+                        }
+                    }
+
+                    speechSynthesis.speak(utterance);
+                }
+            }
+
+            function speakCurrentLetter() {
+                if (
+                    "speechSynthesis" in window &&
+                    currentPosition < currentSentence.length
+                ) {
+                    const currentLetter = currentSentence[currentPosition];
+                    let letterToSpeak = currentLetter.toLowerCase();
+
+                    // Pronunciar "espacio" en lugar del carácter de espacio
+                    if (currentLetter === " ") {
+                        letterToSpeak = "espacio";
+                    }
+
+                    const utterance = new SpeechSynthesisUtterance(
+                        letterToSpeak,
+                    );
+                    utterance.rate = 0.6; // Más lento para las letras
+                    utterance.pitch = 1.2;
+                    utterance.volume = 0.7;
+
+                    // Usar la misma configuración de voz
+                    const voices = speechSynthesis.getVoices();
+                    const childVoice = voices.find(
+                        (voice) =>
+                            voice.name.includes("child") ||
+                            voice.name.includes("niña") ||
+                            voice.name.includes("niño") ||
+                            (voice.gender === "female" &&
+                                voice.lang.startsWith("es")),
+                    );
+
+                    if (childVoice) {
+                        utterance.voice = childVoice;
+                    } else {
+                        const spanishVoice = voices.find((voice) =>
+                            voice.lang.startsWith("es"),
+                        );
+                        if (spanishVoice) {
+                            utterance.voice = spanishVoice;
+                        }
+                    }
+
+                    speechSynthesis.speak(utterance);
+                }
+            }
+
+            function displaySentence() {
+                sentenceDisplay.innerHTML = "";
+
+                for (let i = 0; i < currentSentence.length; i++) {
+                    const span = document.createElement("span");
+                    span.textContent = currentSentence[i];
+                    span.className = "letter";
+
+                    if (i < currentPosition) {
+                        span.classList.add("completed");
+                    } else if (i === currentPosition) {
+                        span.classList.add("current");
+                    }
+
+                    sentenceDisplay.appendChild(span);
+                }
+            }
+
+            function handleInput(event) {
+                const input = event.target.value.toUpperCase();
+
+                // Solo permitir caracteres que coincidan con la oración
+                let validInput = "";
+                for (
+                    let i = 0;
+                    i < input.length && i < currentSentence.length;
+                    i++
+                ) {
+                    if (input[i] === currentSentence[i]) {
+                        validInput += input[i];
+                    } else {
+                        break;
+                    }
+                }
+
+                event.target.value = validInput;
+                userInput = validInput;
+                const previousPosition = currentPosition;
+                currentPosition = validInput.length;
+
+                displaySentence();
+                updateKeyboardHighlight();
+                updateProgress();
+
+                // Decir la nueva letra cuando cambie de posición
+                if (
+                    currentPosition > previousPosition &&
+                    currentPosition < currentSentence.length
+                ) {
+                    speakCurrentLetter();
+                }
+
+                // Verificar si se completó la oración
+                if (currentPosition === currentSentence.length) {
+                    stopTimer();
+                    showCelebration();
+                    // Automáticamente mostrar nueva frase después de un delay
+                    setTimeout(() => {
+                        newSentence();
+                    }, 4000); // 4 segundos para dar tiempo a la celebración
+                }
+            }
+
+            function preventBackspace(event) {
+                // Prevenir retroceso para mantener el progreso
+                if (event.key === "Backspace") {
+                    event.preventDefault();
+                }
+            }
+
+            function simulateKeyPress(letter) {
+                if (
+                    currentPosition < currentSentence.length &&
+                    letter === currentSentence[currentPosition]
+                ) {
+                    inputArea.value += letter;
+                    handleInput({ target: inputArea });
+                }
+            }
+
+            function updateKeyboardHighlight() {
+                // Remover highlight anterior
+                document.querySelectorAll(".key").forEach((key) => {
+                    key.classList.remove("highlight");
+                });
+
+                // Añadir highlight a la tecla actual
+                if (currentPosition < currentSentence.length) {
+                    const currentLetter = currentSentence[currentPosition];
+                    const targetKey = document.querySelector(
+                        `[data-key="${currentLetter}"]`,
+                    );
+                    if (targetKey) {
+                        targetKey.classList.add("highlight");
+                    }
+                }
+            }
+
+            function updateProgress() {
+                if (currentPosition === 0) {
+                    progress.textContent = "¡Empieza a escribir!";
+                } else if (currentPosition === currentSentence.length) {
+                    progress.textContent = "🎉 ¡Completado! 🎉";
+                } else {
+                    const percentage = Math.round(
+                        (currentPosition / currentSentence.length) * 100,
+                    );
+                    progress.textContent = `Progreso: ${currentPosition}/${currentSentence.length} letras (${percentage}%)`;
+                }
+            }
+
+            function updateTimer() {
+                const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsedTime / 60);
+                const seconds = elapsedTime % 60;
+                timerDisplay.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+                timeRecord.textContent = `Tiempo transcurrido: ${elapsedTime} segundos`;
+            }
+
+            function stopTimer() {
+                if (timer) {
+                    clearInterval(timer);
+                    timer = null;
+                }
+                const finalTime = Math.floor((Date.now() - startTime) / 1000);
+                timeRecord.textContent = `¡Completado en ${finalTime} segundos! 🎉`;
+
+                // Agregar la frase completada al historial
+                addToHistory(currentSentence, finalTime);
+
+                // Remover la frase del array de disponibles
+                const sentenceIndex =
+                    availableSentences.indexOf(currentSentence);
+                if (sentenceIndex > -1) {
+                    availableSentences.splice(sentenceIndex, 1);
+                }
+            }
+
+            function showCelebration() {
+                celebration.style.display = "block";
+                speakCelebration(); // Agregar felicitación hablada
+                setTimeout(() => {
+                    celebration.style.display = "none";
+                }, 3000);
+            }
+
+            function resetProgress() {
+                currentPosition = 0;
+                userInput = "";
+                inputArea.value = "";
+                displaySentence();
+                updateKeyboardHighlight();
+                updateProgress();
+
+                // Reiniciar el timer
+                startTime = Date.now();
+                if (timer) {
+                    clearInterval(timer);
+                }
+                timer = setInterval(updateTimer, 100);
+            }
+
+            function addToHistory(sentence, time) {
+                completedSentences.push({ sentence, time, date: new Date() });
+                updateHistoryDisplay();
+            }
+
+            function updateHistoryDisplay() {
+                if (completedSentences.length === 0) {
+                    historyList.innerHTML =
+                        '<div class="history-empty">¡Completa tu primera frase para verla aquí!</div>';
+                    return;
+                }
+
+                historyList.innerHTML = "";
+                completedSentences.forEach((item, index) => {
+                    const historyItem = document.createElement("div");
+                    historyItem.className = "history-item";
+                    historyItem.innerHTML = `
+                    <div class="history-sentence">${item.sentence}</div>
+                    <div class="history-time">⏱️ ${item.time} segundos</div>
+                `;
+                    historyList.appendChild(historyItem);
+                });
+            }
+
+            function showAllCompletedMessage() {
+                sentenceDisplay.innerHTML =
+                    '<span style="color: #48bb78; font-size: 1.8rem;">🎉 ¡Has completado todas las frases! 🎉</span>';
+                timeRecord.textContent = `¡Felicitaciones! Completaste ${completedSentences.length} frases.`;
+
+                // Agregar botón para reiniciar todo
+                const resetAllBtn = document.createElement("button");
+                resetAllBtn.className = "btn";
+                resetAllBtn.textContent = "🔄 Empezar de Nuevo";
+                resetAllBtn.onclick = resetAllProgress;
+
+                // Limpiar controles existentes y agregar el nuevo botón
+                const controls = document.querySelector(".controls");
+                controls.innerHTML = "";
+                controls.appendChild(resetAllBtn);
+            }
+
+            function resetAllProgress() {
+                // Resetear todas las variables
+                completedSentences = [];
+                availableSentences = [...sentences];
+
+                // Restaurar controles originales
+                const controls = document.querySelector(".controls");
+                controls.innerHTML = `
+                <button class="btn" onclick="newSentence()">📝 Nueva Oración</button>
+                <button class="btn" onclick="resetProgress()">🔄 Reiniciar</button>
+                <button class="btn" onclick="speakSentence()">🔊 Repetir Frase</button>
+            `;
+
+                // Limpiar historial
+                updateHistoryDisplay();
+
+                // Limpiar timer
+                if (timer) {
+                    clearInterval(timer);
+                    timer = null;
+                }
+
+                // Empezar nueva sesión
+                newSentence();
+            }
+
+            // Inicializar la aplicación
+            initializeApp();
+        </script>
+    </body>
+</html>
